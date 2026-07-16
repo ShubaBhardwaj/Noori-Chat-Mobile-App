@@ -1,5 +1,6 @@
 import { initAuth, useAuthStore } from "@/features/auth/auth";
 import { navigationTheme } from "@/lib/theme";
+import { QueryProvider } from "@/provider/query-provider";
 import { ThemeProvider } from "@react-navigation/native";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -39,15 +40,17 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={navigationTheme}>
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: BACKGROUND },
-        }}
-      >
-        <Stack.Screen name="(app)" />
-        <Stack.Screen name="(auth)" />
-      </Stack>
+      <QueryProvider>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: BACKGROUND },
+          }}
+        >
+          <Stack.Screen name="(app)" />
+          <Stack.Screen name="(auth)" />
+        </Stack>
+      </QueryProvider>
     </ThemeProvider>
   );
 }

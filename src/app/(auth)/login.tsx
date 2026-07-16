@@ -1,14 +1,8 @@
+import { AuthScreen } from "@/features/auth/auth";
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
 
 const Login = () => {
-  return (
-    <View>
-      <Text>Login</Text>
-    </View>
-  );
+  return <AuthScreen mode="login" />;
 };
 
 export default Login;
-
-const styles = StyleSheet.create({});

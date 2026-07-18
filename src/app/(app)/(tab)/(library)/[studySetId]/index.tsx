@@ -1,5 +1,20 @@
-import { StyleSheet, Text, View } from 'react-native'
-import React from 'react'
+import { useMutation } from "@tanstack/react-query";
+import { Link, Stack, useLocalSearchParams, type Href } from "expo-router";
+import { useState } from "react";
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+
+import {
+  createNoteSource,
+  createWebSource,
+  pickAndUploadPdf,
+} from "@/features/study-sets/actions";
 
 const StudySetDetailScreen = () => {
   return (
@@ -10,5 +25,3 @@ const StudySetDetailScreen = () => {
 }
 
 export default StudySetDetailScreen
-
-const styles = StyleSheet.create({})

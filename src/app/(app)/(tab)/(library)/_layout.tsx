@@ -19,7 +19,7 @@ export default function LibraryLayout() {
         name="[studySetId]/index"
         options={{ title: "Study Set" }}
       />
-      <Stack.Screen
+      {/* <Stack.Screen
         name="[studySetId]/summary"
         options={{ title: "Summary" }}
       />
@@ -27,7 +27,7 @@ export default function LibraryLayout() {
         name="[studySetId]/flashcards"
         options={{ title: "Flashcards" }}
       />
-      <Stack.Screen name="[studySetId]/chat" options={{ title: "Chat" }} />
+      <Stack.Screen name="[studySetId]/chat" options={{ title: "Chat" }} /> */}
     </Stack>
   );
 }

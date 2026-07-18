@@ -9,7 +9,7 @@ type StudySetCardProps = {
 
 export function StudySetCard({ studySet }: StudySetCardProps) {
   return (
-    <Link href={`/(app)/(tabs)/(library)/${studySet.id}` as Href} asChild>
+    <Link href={`/(app)/(tab)/(library)/${studySet.id}` as Href} asChild>
       <Pressable className="gap-2 rounded-2xl border border-border bg-card p-5 active:opacity-80">
         <Text className="text-lg font-semibold text-foreground">{studySet.title}</Text>
         {studySet.description ? (

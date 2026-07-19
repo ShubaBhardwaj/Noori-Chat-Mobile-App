@@ -1,0 +1,31 @@
+{
+  "name": "server",
+  "module": "src/index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@ai-sdk/openai": "^4.0.11",
+    "@supabase/supabase-js": "^2.110.2",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.1.1",
+    "ai": "^7.0.22",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "firecrawl": "^4.30.0",
+    "pdf-parse": "^2.4.5",
+    "tsx": "^4.23.0",
+    "zod": "^4.4.3"
+  }
+}

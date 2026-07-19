@@ -35,12 +35,7 @@ export default function SettingsScreen() {
         </Text>
       </View>
 
-      <View className="gap-2 rounded-2xl border border-border bg-card p-5">
-        <Text className="text-sm text-muted">API backend</Text>
-        <Text selectable className="text-sm text-foreground">
-          {process.env.EXPO_PUBLIC_API_URL ?? "Not configured"}
-        </Text>
-      </View>
+
 
       <Pressable
         disabled={loading}

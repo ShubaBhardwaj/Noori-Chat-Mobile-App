@@ -1,11 +1,11 @@
-import { createOpenAI } from "@ai-sdk/openai";
+import { createGoogle } from "@ai-sdk/google";
 import { env } from "../env";
 
-const openai = createOpenAI({
-    apiKey: env.openaiApiKey,
+const google = createGoogle({
+    apiKey: env.googleApiKey,
 });
 
-export const chatModel = openai.chat(env.chatModel);
-export const embeddingModel = openai.embeddingModel(env.embeddingModel);
+export const chatModel = google.chat(env.chatModel);
+export const embeddingModel = google.textEmbeddingModel(env.embeddingModel);
 
 export const chatModelId = env.chatModel;

@@ -19,9 +19,9 @@ export const env = {
   supabaseUrl: required("SUPABASE_URL"),
   supabaseAnonKey: required("SUPABASE_ANON_KEY"),
   supabaseServiceRoleKey: required("SUPABASE_SERVICE_ROLE_KEY"),
-  openaiApiKey: required("OPENAI_API_KEY"),
-  chatModel: process.env.OPENAI_CHAT_MODEL ?? "gpt-4o-mini",
-  embeddingModel: process.env.OPENAI_EMBEDDING_MODEL ?? "text-embedding-3-small",
+  googleApiKey: required("GOOGLE_GENERATIVE_AI_API_KEY"),
+  chatModel: process.env.GEMINI_CHAT_MODEL ?? "gemini-2.5-flash",
+  embeddingModel: process.env.GEMINI_EMBEDDING_MODEL ?? "gemini-embedding-001",
   /** Secret key (sk_...) for server-side entitlement checks. Optional in local dev. */
   revenueCatSecretApiKey: process.env.REVENUECAT_SECRET_API_KEY?.trim() || "",
   firecrawlApiKey: required("FIRECRAWL_API_KEY"),

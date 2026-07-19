@@ -1,8 +1,9 @@
 import { useMutation } from "@tanstack/react-query";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
 import { StatusBadge } from "@/components/status-badge";
-import { retryProcessSource } from "@/features/study-sets/actions";
+import { deleteSource, retryProcessSource } from "@/features/study-sets/actions";
 import {
   type Source,
   useInvalidateStudySet,
@@ -23,6 +24,10 @@ export function SourceRow({
     onSuccess: () => invalidate(studySetId),
     onError: () => invalidate(studySetId),
   });
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteSource(source.id, source.type, source.storage_path),
+    onSuccess: () => invalidate(studySetId),
+  });
 
   return (
     <View className="flex-row items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3">
@@ -38,21 +43,47 @@ export function SourceRow({
             {source.error_message}
           </Text>
         ) : null}
-        {source.status === "failed" ? (
+      </View>
+      <View className="flex-row items-center gap-2">
+        <StatusBadge status={source.status} />
+        {source.status !== "ready" && (
           <Pressable
-            disabled={retryMutation.isPending}
+            disabled={retryMutation.isPending || deleteMutation.isPending}
             onPress={() => retryMutation.mutate()}
-            className="mt-1 self-start rounded-lg border border-border px-3 py-1.5 disabled:opacity-50"
+            className="p-1.5 rounded-lg border border-border bg-input disabled:opacity-50 active:opacity-70"
           >
             {retryMutation.isPending ? (
               <ActivityIndicator color="#ffc799" size="small" />
             ) : (
-              <Text className="text-xs font-medium text-foreground">Retry</Text>
+              <Ionicons name="refresh" size={16} color="#ffffff" />
             )}
           </Pressable>
-        ) : null}
+        )}
+        <Pressable
+          disabled={deleteMutation.isPending || retryMutation.isPending}
+          onPress={() => {
+            Alert.alert(
+              "Delete Source",
+              `Are you sure you want to delete "${source.title}"?`,
+              [
+                { text: "Cancel", style: "cancel" },
+                {
+                  text: "Delete",
+                  style: "destructive",
+                  onPress: () => deleteMutation.mutate(),
+                },
+              ]
+            );
+          }}
+          className="p-1.5 rounded-lg border border-border bg-input disabled:opacity-50 active:opacity-70"
+        >
+          {deleteMutation.isPending ? (
+            <ActivityIndicator color="#ef4444" size="small" />
+          ) : (
+            <Ionicons name="trash-outline" size={16} color="#ef4444" />
+          )}
+        </Pressable>
       </View>
-      <StatusBadge status={source.status} />
     </View>
   );
 }

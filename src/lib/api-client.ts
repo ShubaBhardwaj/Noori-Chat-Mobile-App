@@ -1,7 +1,7 @@
 import { useAuthStore } from "@/features/auth/auth";
 import { supabase } from "@/utils/supabase";
 
-const API_URL = `http://127.0.0.1:3001`;
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 export type ChunkMatch = { id: string; content: string; similarity: number };
 
@@ -46,11 +46,11 @@ export function generateSummary(studySetId: string) {
   );
 }
 
-export function generateFlashcards(studySetId: string, count?: number) {
+export function generateFlashcards(studySetId: string, count?: number, deckId?: string) {
   return apiPost<{
     deckId: string;
     cards: { front: string; back: string }[];
-  }>(`/study-sets/${studySetId}/flashcards`, { count });
+  }>(`/study-sets/${studySetId}/flashcards`, { count, deckId });
 }
 
 export function sendChatMessage(conversationId: string, message: string) {

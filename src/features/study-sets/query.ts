@@ -28,6 +28,25 @@ export type Source = {
   updated_at: string;
 };
 
+export type FlashcardDeck = {
+  id: string;
+  user_id: string;
+  study_set_id: string;
+  title: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Flashcard = {
+  id: string;
+  deck_id: string;
+  front: string;
+  back: string;
+  sort_order: number;
+  created_at: string;
+};
+
+
 export type Message = {
   id: string;
   conversation_id: string;
@@ -146,6 +165,47 @@ export function useLatestFlashcardDeck(studySetId: string) {
     enabled: !!studySetId,
   });
 }
+
+export function useFlashcardDecks(studySetId: string) {
+  return useQuery({
+    queryKey: ["study-sets", studySetId, "flashcard-decks"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("flashcard_decks")
+        .select("*, flashcards(count)")
+        .eq("study_set_id", studySetId)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data as (FlashcardDeck & { flashcards: { count: number }[] })[];
+    },
+    enabled: !!studySetId,
+  });
+}
+
+export function useFlashcardDeck(deckId: string) {
+  return useQuery({
+    queryKey: ["flashcard-deck", deckId],
+    queryFn: async () => {
+      const { data: deck, error: deckError } = await supabase
+        .from("flashcard_decks")
+        .select("*")
+        .eq("id", deckId)
+        .single();
+      if (deckError) throw deckError;
+
+      const { data: cards, error: cardsError } = await supabase
+        .from("flashcards")
+        .select("*")
+        .eq("deck_id", deckId)
+        .order("sort_order", { ascending: true });
+      if (cardsError) throw cardsError;
+
+      return { deck, cards: cards || [] };
+    },
+    enabled: !!deckId,
+  });
+}
+
 
 export function useConversations(studySetId: string) {
   return useQuery({

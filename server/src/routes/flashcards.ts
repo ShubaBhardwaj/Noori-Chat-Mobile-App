@@ -25,8 +25,14 @@ function buildFlashcardSchema(count: number) {
   });
 }
 
-function systemPrompt(count: number) {
-  return `You are a study assistant. Generate exactly ${count} concise, high-quality flashcards from the provided material.
+function systemPrompt(count: number, existingQuestions?: string[]) {
+  const duplicateInstruction =
+    existingQuestions && existingQuestions.length > 0
+      ? `\nCRITICAL: Do NOT duplicate any of the following existing terms or questions: ${JSON.stringify(
+          existingQuestions,
+        )}. Generate entirely new terms/questions.`
+      : "";
+  return `You are a study assistant. Generate exactly ${count} concise, high-quality flashcards from the provided material.${duplicateInstruction}
 Return ONLY valid JSON matching this shape (no markdown fences):
 {"cards":[{"front":"question or term","back":"answer or definition"}]}
 `;
@@ -84,11 +90,36 @@ flashcardsRouter.post("/:id/flashcards", async (req, res) => {
         .json({ error: "No processed sources to generate flashcards from yet" });
     }
 
+    const bodyDeckId = typeof req.body?.deckId === "string" ? req.body.deckId : "";
+    let deckId = bodyDeckId;
+    let existingCards: { front: string }[] = [];
+
+    if (deckId) {
+      const { data: existingDeck } = await supabaseAdmin
+        .from("flashcard_decks")
+        .select("id")
+        .eq("id", deckId)
+        .single();
+
+      if (existingDeck) {
+        const { data } = await supabaseAdmin
+          .from("flashcards")
+          .select("front")
+          .eq("deck_id", deckId);
+        existingCards = data || [];
+      } else {
+        deckId = "";
+      }
+    }
+
     const count = requestedCount(req.body);
 
     const { text } = await generateText({
       model: chatModel,
-      system: systemPrompt(count),
+      system: systemPrompt(
+        count,
+        existingCards.map((c) => c.front),
+      ),
       prompt: material,
       temperature: 0.4,
     });
@@ -96,23 +127,36 @@ flashcardsRouter.post("/:id/flashcards", async (req, res) => {
     const schema = buildFlashcardSchema(count);
     const parsed = schema.parse(extractJsonObject(text));
 
-    const { data: deck, error: deckError } = await supabaseAdmin
-      .from("flashcard_decks")
-      .insert({
-        user_id: userId,
-        study_set_id: studySetId,
-        title: `${studySet.title} Flashcards`,
-      })
-      .select("id")
-      .single();
+    if (!deckId) {
+      const { count: deckCount } = await supabaseAdmin
+        .from("flashcard_decks")
+        .select("id", { count: "exact", head: true })
+        .eq("study_set_id", studySetId)
+        .eq("user_id", userId);
 
-    if (deckError) throw new Error(deckError.message);
+      const deckNumber = (deckCount ?? 0) + 1;
+      const title = `${studySet.title} Deck ${deckNumber}`;
 
+      const { data: deck, error: deckError } = await supabaseAdmin
+        .from("flashcard_decks")
+        .insert({
+          user_id: userId,
+          study_set_id: studySetId,
+          title,
+        })
+        .select("id")
+        .single();
+
+      if (deckError) throw new Error(deckError.message);
+      deckId = deck.id;
+    }
+
+    const startOrder = existingCards.length;
     const rows = parsed.cards.map((card, index) => ({
-      deck_id: deck.id,
+      deck_id: deckId,
       front: card.front,
       back: card.back,
-      sort_order: index,
+      sort_order: startOrder + index,
     }));
 
     const { error: cardsError } = await supabaseAdmin
@@ -121,7 +165,7 @@ flashcardsRouter.post("/:id/flashcards", async (req, res) => {
     if (cardsError) throw new Error(cardsError.message);
 
     res.json({
-      deckId: deck.id,
+      deckId: deckId,
       cards: parsed.cards,
     });
   } catch (err) {

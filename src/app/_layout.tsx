@@ -3,6 +3,7 @@ import { navigationTheme } from "@/lib/theme";
 import { QueryProvider } from "@/provider/query-provider";
 import { ThemeProvider } from "@react-navigation/native";
 import { Stack } from "expo-router";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import * as SplashScreen from "expo-splash-screen";
 import * as SystemUI from "expo-system-ui";
 import { useEffect } from "react";
@@ -39,18 +40,20 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={navigationTheme}>
-      <QueryProvider>
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: BACKGROUND },
-          }}
-        >
-          <Stack.Screen name="(app)" />
-          <Stack.Screen name="(auth)" />
-        </Stack>
-      </QueryProvider>
-    </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider value={navigationTheme}>
+        <QueryProvider>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: BACKGROUND },
+            }}
+          >
+            <Stack.Screen name="(app)" />
+            <Stack.Screen name="(auth)" />
+          </Stack>
+        </QueryProvider>
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }

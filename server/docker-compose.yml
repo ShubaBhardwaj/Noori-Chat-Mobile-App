@@ -1,0 +1,15 @@
+services:
+  noteslm-backend:
+    build: .
+    container_name: noteslm-backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    expose:
+      - "8001"
+    networks:
+      - proxy-network
+
+networks:
+  proxy-network:
+    external: true

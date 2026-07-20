@@ -93,6 +93,9 @@ export async function ingestSource(
         const { embeddings } = await embedMany({
             model: embeddingModel,
             values: chunks,
+            providerOptions: {
+                google: { outputDimensionality: 1536 },
+            },
         });
 
         // Replace any prior chunks so reprocessing is idempotent.

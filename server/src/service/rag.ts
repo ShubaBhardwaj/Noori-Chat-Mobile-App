@@ -12,7 +12,13 @@ export async function retrieveContext(
     query: string,
     matchCount = 8,
   ): Promise<MatchedChunk[]> {
-    const { embedding } = await embed({ model: embeddingModel, value: query });
+    const { embedding } = await embed({
+      model: embeddingModel,
+      value: query,
+      providerOptions: {
+        google: { outputDimensionality: 1536 },
+      },
+    });
   
     const { data, error } = await supabaseAdmin.rpc("match_source_chunks", {
       query_embedding: JSON.stringify(embedding),

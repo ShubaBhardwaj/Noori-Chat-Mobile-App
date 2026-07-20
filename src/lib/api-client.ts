@@ -59,3 +59,7 @@ export function sendChatMessage(conversationId: string, message: string) {
     { message },
   );
 }
+
+export function deleteAccount() {
+  return apiPost<{ success: boolean; message: string }>("/account/delete");
+}

@@ -1,4 +1,6 @@
+import { Ionicons } from "@expo/vector-icons";
 import type { Session } from "@supabase/supabase-js";
+import * as Linking from "expo-linking";
 import { Link, type Href } from "expo-router";
 import { useState } from "react";
 import {
@@ -65,8 +67,31 @@ export async function signIn(email: string, password: string) {
     if (error) throw error;
 }
 
+export function getRedirectUrl() {
+    return Linking.createURL("auth/callback");
+}
+
 export async function signUp(email: string, password: string) {
-    const { error } = await supabase.auth.signUp({ email, password });
+    const emailRedirectTo = getRedirectUrl();
+    const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+            emailRedirectTo,
+        },
+    });
+    if (error) throw error;
+}
+
+export async function resendConfirmationEmail(email: string) {
+    const emailRedirectTo = getRedirectUrl();
+    const { error } = await supabase.auth.resend({
+        type: "signup",
+        email,
+        options: {
+            emailRedirectTo,
+        },
+    });
     if (error) throw error;
 }
 
@@ -76,7 +101,12 @@ export async function signOut() {
 }
 
 function getErrorMessage(error: unknown) {
-    if (error instanceof Error) return error.message;
+    if (error instanceof Error) {
+        if (error.message.toLowerCase().includes("email not confirmed")) {
+            return "Your email address is not verified yet. Please check your inbox for the confirmation link to activate your account.";
+        }
+        return error.message;
+    }
     return "Something went wrong";
 }
 
@@ -89,8 +119,12 @@ export function AuthScreen({ mode }: AuthScreenProps) {
   
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
+    const [isSuccessMessage, setIsSuccessMessage] = useState(false);
+    const [showResend, setShowResend] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [resending, setResending] = useState(false);
   
     const isLogin = mode === "login";
   
@@ -104,6 +138,8 @@ export function AuthScreen({ mode }: AuthScreenProps) {
   
     async function handleSubmit() {
       setMessage(null);
+      setIsSuccessMessage(false);
+      setShowResend(false);
       setLoading(true);
   
       try {
@@ -113,13 +149,41 @@ export function AuthScreen({ mode }: AuthScreenProps) {
           await signIn(trimmedEmail, password);
         } else {
           await signUp(trimmedEmail, password);
-          setMessage("Account created. Check your email if confirmation is enabled.");
+          setIsSuccessMessage(true);
+          setMessage("Account created! Please check your email and click the confirmation link to complete sign up.");
+          setEmail("");
+          setPassword("");
         }
       } catch (error) {
-        setMessage(getErrorMessage(error));
+        const msg = getErrorMessage(error);
+        setMessage(msg);
+        setIsSuccessMessage(false);
+
+        if (error instanceof Error && error.message.toLowerCase().includes("email not confirmed")) {
+            setShowResend(true);
+        }
       } finally {
-        // Always turn off the spinner, success or failure
         setLoading(false);
+      }
+    }
+
+    async function handleResendVerification() {
+      if (!email.trim()) {
+        setMessage("Please enter your email address to resend verification.");
+        setIsSuccessMessage(false);
+        return;
+      }
+
+      setResending(true);
+      try {
+        await resendConfirmationEmail(email.trim());
+        setIsSuccessMessage(true);
+        setMessage("Verification email resent! Please check your inbox.");
+      } catch (err) {
+        setIsSuccessMessage(false);
+        setMessage(getErrorMessage(err));
+      } finally {
+        setResending(false);
       }
     }
   
@@ -138,7 +202,7 @@ export function AuthScreen({ mode }: AuthScreenProps) {
       >
         {/* Header */}
         <View className="gap-2 justify-center items-center">
-          <Text className="text-5xl font-semibold text-foreground">Noori Chat</Text>
+          <Text className="text-5xl font-semibold text-foreground">Notes LM</Text>
           <Text className="text-xl font-semibold text-foreground">Your AI Study Buddy</Text>
           <Text className="text-base text-muted">{subtitle}</Text>
         </View>
@@ -161,22 +225,53 @@ export function AuthScreen({ mode }: AuthScreenProps) {
   
           <View className="gap-2">
             <Text className="text-sm text-muted">Password</Text>
-            <TextInput
-              autoCapitalize="none"
-              autoComplete={passwordAutoComplete}
-              secureTextEntry
-              placeholder="••••••••"
-              placeholderTextColor="#7e7e7e"
-              value={password}
-              onChangeText={setPassword}
-              className="rounded-xl border border-border bg-input px-4 py-3 text-foreground"
-            />
+            <View className="flex-row items-center rounded-xl border border-border bg-input px-4">
+              <TextInput
+                autoCapitalize="none"
+                autoComplete={passwordAutoComplete}
+                secureTextEntry={!showPassword}
+                placeholder="••••••••"
+                placeholderTextColor="#7e7e7e"
+                value={password}
+                onChangeText={setPassword}
+                className="flex-1 py-3 text-foreground"
+              />
+              <Pressable
+                onPress={() => setShowPassword((prev) => !prev)}
+                hitSlop={8}
+                className="py-2 pl-2"
+              >
+                <Ionicons
+                  name={showPassword ? "eye-off-outline" : "eye-outline"}
+                  size={20}
+                  color="#a0a0a0"
+                />
+              </Pressable>
+            </View>
           </View>
   
           {message ? (
-            <Text selectable className="text-sm text-danger">
-              {message}
-            </Text>
+            <View className={`rounded-xl border p-4 ${isSuccessMessage ? "border-emerald-500/30 bg-emerald-500/10" : "border-danger/30 bg-danger/10"}`}>
+              <Text selectable className={`text-sm ${isSuccessMessage ? "text-emerald-400" : "text-danger"}`}>
+                {message}
+              </Text>
+            </View>
+          ) : null}
+
+          {showResend ? (
+            <Pressable
+              disabled={resending}
+              onPress={handleResendVerification}
+              className="items-center rounded-xl border border-border bg-card px-4 py-3"
+            >
+              {resending ? (
+                <ActivityIndicator color="#ffc799" />
+              ) : (
+                <Text className="text-sm font-medium text-primary">
+                  Resend verification email
+                </Text>
+              )}
+            </Pressable>
           ) : null}
   
           <Pressable
